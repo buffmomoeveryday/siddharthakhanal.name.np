@@ -445,9 +445,9 @@
 											href={repo.html_url}
 											target="_blank"
 											rel="noreferrer"
-											class="text-accent transition-opacity hover:opacity-70"
+											class="inline-flex items-center text-accent transition-opacity hover:opacity-70"
 										>
-											GitHub
+											<TechLogo name="GitHub" size={13} />
 										</a>
 									</li>
 									{#if extra.docs}
