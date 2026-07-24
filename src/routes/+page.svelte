@@ -298,10 +298,19 @@
 			{#if USING.length}
 				<section class="border-b border-line py-8" style="animation: rise 0.7s ease 0.08s both;">
 					<p class="mb-5 text-[13px] font-medium tracking-wide text-comment">// using</p>
-					<ul class="flex flex-wrap gap-x-4 gap-y-3">
-						{#each USING as item (item)}
-							<li class="text-[13.5px] font-medium tracking-wide text-ink">
-								<TechLogo name={item} size={18} />
+					<ul class="space-y-5">
+						{#each USING as group (group.category)}
+							<li>
+								<p class="mb-2 text-[12px] font-semibold tracking-[0.12em] text-faint uppercase">
+									{group.category}
+								</p>
+								<ul class="flex flex-wrap gap-x-4 gap-y-3">
+									{#each group.items as item (item)}
+										<li class="text-[13.5px] font-medium tracking-wide text-ink">
+											<TechLogo name={item} size={18} />
+										</li>
+									{/each}
+								</ul>
 							</li>
 						{/each}
 					</ul>

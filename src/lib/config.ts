@@ -20,37 +20,43 @@ export const SOCIAL_LINKS: { label: string; href: string }[] = [
  * Tools & stack shown in the // using section.
  * Leave empty to hide the section.
  */
-export const USING: string[] = [
-	'Python',
-	'Django',
-	'DRF',
-	'Django Ninja',
-	'Django Channels',
-	'Celery',
-	'Nim',
-	'SvelteKit',
-	'TypeScript',
-	'JavaScript',
-	'HTML',
-	'CSS',
-	'SQL',
-	'PostgreSQL',
-	'SQLite',
-	'Redis',
-	'Docker',
-	'Docker Swarm',
-	'Git',
-	'Linux',
-	'GitHub Actions',
-	'Nginx',
-	'Gunicorn',
-	'DigitalOcean',
-	'DigitalOcean App Platform',
-	'S3',
-	'Cloudflare',
-	'Cloudflare R2',
-	'D1',
-	'Workers'
+export type UsingGroup = {
+	category: string;
+	items: string[];
+};
+
+export const USING: UsingGroup[] = [
+	{
+		category: 'Languages',
+		items: ['Python', 'Go', 'Nim', 'TypeScript', 'JavaScript', 'SQL']
+	},
+	{
+		category: 'Backend',
+		items: ['Django', 'DRF', 'Django Ninja', 'Django Channels', 'FastAPI', 'Go', 'Nim', 'Celery']
+	},
+	{
+		category: 'Frontend',
+		items: ['SvelteKit', 'HTML', 'CSS']
+	},
+	{
+		category: 'Databases & Cache',
+		items: ['PostgreSQL', 'SQLite', 'Redis', 'D1']
+	},
+	{
+		category: 'DevOps',
+		items: ['Docker', 'Docker Swarm', 'Git', 'Linux', 'GitHub Actions', 'Nginx', 'Gunicorn']
+	},
+	{
+		category: 'Cloud',
+		items: [
+			'DigitalOcean',
+			'DigitalOcean App Platform',
+			'S3',
+			'Cloudflare',
+			'Cloudflare R2',
+			'Workers'
+		]
+	}
 ];
 
 /**
