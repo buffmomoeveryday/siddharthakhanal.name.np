@@ -6,7 +6,8 @@
 
 	const post = $derived(data.post);
 
-	function formatDate(iso: string) {
+	function formatDate(iso: string | undefined) {
+		if (!iso) return '';
 		return new Date(iso + (iso.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('en-US', {
 			year: 'numeric',
 			month: 'short',
@@ -21,30 +22,32 @@
 </svelte:head>
 
 <main class="mx-auto min-h-dvh w-full max-w-[720px] px-5 py-10 sm:px-8 sm:py-16">
-	<header class="border-line border-b pb-8">
+	<header class="border-b border-line pb-8">
 		<div class="mb-6 flex items-center justify-between gap-4">
 			<a
 				href="/blog"
-				class="text-muted hover:text-accent text-[13px] font-semibold tracking-wide transition-colors"
+				class="text-[13px] font-semibold tracking-wide text-muted transition-colors hover:text-accent"
 			>
 				Blog
 			</a>
 			<ThemeToggle />
 		</div>
 
-		<p class="text-comment mb-3 text-[13px] font-medium tracking-wide">// post</p>
+		<p class="mb-3 text-[13px] font-medium tracking-wide text-comment">// post</p>
 		<h1 class="text-[clamp(1.6rem,4vw,2.2rem)] leading-tight font-semibold tracking-[-0.03em]">
 			{post.title}
 		</h1>
 		<div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-			<time class="text-faint text-[13px] font-medium" datetime={post.date}
-				>{formatDate(post.date)}</time
-			>
+			{#if post.date}
+				<time class="text-[13px] font-medium text-faint" datetime={post.date}>
+					{formatDate(post.date)}
+				</time>
+			{/if}
 			{#if post.tags.length}
 				<ul class="flex flex-wrap gap-2">
 					{#each post.tags as tag (tag)}
 						<li>
-							<a href="/blog?tag={encodeURIComponent(tag)}" class="tag-chip">{tag}</a>
+							<span class="tag-chip">{tag}</span>
 						</li>
 					{/each}
 				</ul>
@@ -52,12 +55,13 @@
 		</div>
 	</header>
 
-	<article class="prose-blog border-line border-b py-8">
+	<article class="prose-blog border-b border-line py-8">
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html post.html}
 	</article>
 
 	<footer class="pt-6">
-		<a href="/blog" class="text-accent text-[13px] font-semibold tracking-wide hover:opacity-70">
+		<a href="/blog" class="text-[13px] font-semibold tracking-wide text-accent hover:opacity-70">
 			All posts
 		</a>
 	</footer>

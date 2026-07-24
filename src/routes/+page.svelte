@@ -2,8 +2,15 @@
 	import TechLogo from '#lib/components/TechLogo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import ContributionChart from '#lib/components/ContributionChart.svelte';
-	import DownloadPdfButton from '#lib/components/DownloadPdfButton.svelte';
-	import { EXPERIENCE, LINKS, PROJECTS, SITE, USING } from '#lib/config';
+	import {
+		EDUCATION,
+		EXPERIENCE,
+		FEATURED_PROJECTS,
+		LINKS,
+		PROJECTS,
+		SOCIAL_LINKS,
+		USING
+	} from '#lib/config';
 	import type { BlogMeta } from '#lib/server/blog';
 	import type { PortfolioData } from '#lib/server/github';
 
@@ -49,41 +56,21 @@
 		}
 		return null;
 	}
-
-	const resumeInput = $derived(
-		user
-			? {
-					name: displayName(user),
-					location: user.location,
-					company: user.company,
-					githubUrl: user.html_url,
-					email: SITE.email,
-					// website: SITE.website,
-					repos: repos.map((r) => ({
-						name: r.name,
-						description: r.description,
-						html_url: r.html_url,
-						language: r.language,
-						stargazers_count: r.stargazers_count
-					}))
-				}
-			: null
-	);
 </script>
 
 {#if data.error || !user || !stats}
 	<main class="mx-auto flex min-h-dvh max-w-2xl items-center px-6 py-16">
 		<div class="w-full">
-			<p class="text-comment mb-2 text-sm font-medium tracking-wide">// error</p>
+			<p class="mb-2 text-sm font-medium tracking-wide text-comment">// error</p>
 			<h1 class="text-2xl font-semibold tracking-tight">Could not load portfolio</h1>
-			<p class="text-muted mt-3 text-sm leading-relaxed">{data.error ?? 'Unknown error'}</p>
+			<p class="mt-3 text-sm leading-relaxed text-muted">{data.error ?? 'Unknown error'}</p>
 		</div>
 	</main>
 {:else}
 	<main class="mx-auto min-h-dvh w-full max-w-[720px] px-5 py-10 sm:px-8 sm:py-16">
 		<article style="animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;">
 			<!-- Header -->
-			<header class="border-line border-b pb-8">
+			<header class="border-b border-line pb-8">
 				<div class="mb-6 flex items-start justify-between gap-4">
 					<div class="min-w-0">
 						<h1
@@ -92,12 +79,12 @@
 							{displayName(user)}
 						</h1>
 						{#if user.company || user.location}
-							<p class="text-muted mt-2 text-sm font-medium tracking-wide">
+							<p class="mt-2 text-sm font-medium tracking-wide text-muted">
 								{#if user.company}
 									{user.company.trim()}
 								{/if}
 								{#if user.company && user.location}
-									<span class="text-faint mx-2">·</span>
+									<span class="mx-2 text-faint">·</span>
 								{/if}
 								{#if user.location}
 									{user.location}
@@ -105,7 +92,7 @@
 							</p>
 						{/if}
 						{#if user.bio}
-							<p class="text-muted mt-3 max-w-md text-[15px] leading-relaxed">{user.bio}</p>
+							<p class="mt-3 max-w-md text-[15px] leading-relaxed text-muted">{user.bio}</p>
 						{/if}
 					</div>
 
@@ -116,42 +103,52 @@
 							alt=""
 							width="72"
 							height="72"
-							class="border-line size-[72px] border object-cover grayscale-[15%] dark:grayscale-[25%]"
+							class="size-[72px] border border-line object-cover grayscale-[15%] dark:grayscale-[25%]"
 							style="animation: fade 0.9s ease 0.15s both;"
 						/>
 					</div>
 				</div>
 
-				<ul
-					class="text-muted flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-medium tracking-wide"
-				>
+				<ul class="flex flex-wrap gap-x-5 gap-y-2 text-[13px] font-medium tracking-wide text-muted">
 					<li>
-						<a href="/blog" class="hover:text-accent transition-colors">Blog</a>
+						<a href="/projects" class="transition-colors hover:text-accent">Projects</a>
 					</li>
-					<!-- <li>
-						{#if resumeInput}
-							<DownloadPdfButton resume={resumeInput} />
-						{/if}
-					</li> -->
+					<li>
+						<a href="/blog" class="transition-colors hover:text-accent">Blog</a>
+					</li>
+					<li>
+						<a href="/contact" class="transition-colors hover:text-accent">Contact</a>
+					</li>
 					<li>
 						<a
-							href={user.html_url}
-							class="hover:text-accent transition-colors"
-							target="_blank"
-							rel="noreferrer"
+							href="/resume.pdf"
+							download="Siddhartha-Khanal-Resume.pdf"
+							class="inline-flex items-center transition-colors hover:text-accent"
 						>
-							GitHub
+							<TechLogo name="Resume" size={15} />
 						</a>
 					</li>
+					{#each SOCIAL_LINKS as link (link.href)}
+						<li>
+							<a
+								href={link.href}
+								class="inline-flex items-center transition-colors hover:text-accent"
+								target="_blank"
+								rel="noreferrer"
+							>
+								<TechLogo name={link.label} size={15} />
+							</a>
+						</li>
+					{/each}
 					{#each LINKS as link (link.href)}
 						<li>
 							<a
 								href={link.href}
-								class="hover:text-accent transition-colors"
+								class="inline-flex items-center transition-colors hover:text-accent"
 								target={link.href.startsWith('mailto:') ? undefined : '_blank'}
 								rel={link.href.startsWith('mailto:') ? undefined : 'noreferrer'}
 							>
-								{link.label}
+								<TechLogo name={link.label} size={15} />
 							</a>
 						</li>
 					{/each}
@@ -159,7 +156,7 @@
 						<li>
 							<a
 								href={user.blog.startsWith('http') ? user.blog : `https://${user.blog}`}
-								class="hover:text-accent transition-colors"
+								class="transition-colors hover:text-accent"
 								target="_blank"
 								rel="noreferrer"
 							>
@@ -172,25 +169,28 @@
 
 			<!-- Experience -->
 			{#if EXPERIENCE.length}
-				<section class="border-line border-b py-8" style="animation: rise 0.7s ease 0.06s both;">
-					<p class="text-comment mb-5 text-[13px] font-medium tracking-wide">// experience</p>
-					<ul class="divide-line divide-y">
+				<section class="border-b border-line py-8" style="animation: rise 0.7s ease 0.06s both;">
+					<p class="mb-5 text-[13px] font-medium tracking-wide text-comment">// experience</p>
+					<ul class="divide-y divide-line">
 						{#each EXPERIENCE as job, i (job.company + job.role + job.start)}
-							<li class="py-4 first:pt-0 last:pb-0" style="animation: rise 0.55s ease {0.08 + i * 0.05}s both;">
+							<li
+								class="py-4 first:pt-0 last:pb-0"
+								style="animation: rise 0.55s ease {0.08 + i * 0.05}s both;"
+							>
 								<div
 									class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
 								>
 									<div class="min-w-0">
-										<p class="text-ink text-[15px] font-semibold tracking-tight">
+										<p class="text-[15px] font-semibold tracking-tight text-ink">
 											{job.role}
 										</p>
-										<p class="text-muted mt-0.5 text-[13.5px] font-medium tracking-wide">
+										<p class="mt-0.5 text-[13.5px] font-medium tracking-wide text-muted">
 											{#if job.url}
 												<a
 													href={job.url}
 													target="_blank"
 													rel="noreferrer"
-													class="hover:text-accent transition-colors"
+													class="transition-colors hover:text-accent"
 												>
 													{job.company}
 												</a>
@@ -202,13 +202,13 @@
 											{/if}
 										</p>
 									</div>
-									<p class="text-faint shrink-0 text-[12px] font-medium tabular-nums tracking-wide">
+									<p class="shrink-0 text-[12px] font-medium tracking-wide text-faint tabular-nums">
 										{job.start}
 										<span class="text-faint/80"> — </span>
 										{job.end ?? 'Present'}
 									</p>
 								</div>
-								<p class="text-muted mt-2.5 max-w-prose text-[13.5px] leading-relaxed">
+								<p class="mt-2.5 max-w-prose text-[13.5px] leading-relaxed text-muted">
 									{job.summary}
 								</p>
 							</li>
@@ -217,13 +217,60 @@
 				</section>
 			{/if}
 
+			<!-- Education -->
+			{#if EDUCATION.length}
+				<section class="border-b border-line py-8" style="animation: rise 0.7s ease 0.07s both;">
+					<p class="mb-5 text-[13px] font-medium tracking-wide text-comment">// education</p>
+					<ul class="divide-y divide-line">
+						{#each EDUCATION as item, i (item.school + item.degree)}
+							<li
+								class="py-4 first:pt-0 last:pb-0"
+								style="animation: rise 0.55s ease {0.1 + i * 0.05}s both;"
+							>
+								<div
+									class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
+								>
+									<div class="min-w-0">
+										<p class="text-[15px] font-semibold tracking-tight text-ink">
+											{item.degree ?? item.school}
+										</p>
+										<p class="mt-0.5 text-[13.5px] font-medium tracking-wide text-muted">
+											{item.school}
+											{#if item.location}
+												<span class="text-faint"> · {item.location}</span>
+											{/if}
+										</p>
+									</div>
+									{#if item.start || item.end}
+										<p
+											class="shrink-0 text-[12px] font-medium tracking-wide text-faint tabular-nums"
+										>
+											{item.start ?? ''}
+											{#if item.start && item.end}
+												<span class="text-faint/80"> — </span>
+											{/if}
+											{item.end ?? ''}
+										</p>
+									{/if}
+								</div>
+								{#if item.summary}
+									<p class="mt-2.5 max-w-prose text-[13.5px] leading-relaxed text-muted">
+										{item.summary}
+									</p>
+								{/if}
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{/if}
+
 			<!-- Using -->
 			{#if USING.length}
-				<section class="border-line border-b py-8" style="animation: rise 0.7s ease 0.08s both;">
-					<p class="text-comment mb-5 text-[13px] font-medium tracking-wide">// using</p>
+				<section class="border-b border-line py-8" style="animation: rise 0.7s ease 0.08s both;">
+					<p class="mb-5 text-[13px] font-medium tracking-wide text-comment">// using</p>
 					<ul class="flex flex-wrap gap-x-4 gap-y-3">
 						{#each USING as item (item)}
-							<li class="text-ink text-[13.5px] font-medium tracking-wide">
+							<li class="text-[13.5px] font-medium tracking-wide text-ink">
 								<TechLogo name={item} size={18} />
 							</li>
 						{/each}
@@ -232,23 +279,16 @@
 			{/if}
 
 			<!-- Stats -->
-			<section class="border-line border-b py-8" style="animation: rise 0.7s ease 0.12s both;">
-				<p class="text-comment mb-5 text-[13px] font-medium tracking-wide">// github.stats</p>
+			<section class="border-b border-line py-8" style="animation: rise 0.7s ease 0.12s both;">
+				<p class="mb-5 text-[13px] font-medium tracking-wide text-comment">// github.stats</p>
 
 				<div class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4">
-					{#each [
-						{ label: 'repos', value: stats.ownedRepos },
-						{ label: 'stars', value: stats.totalStars },
-						{ label: 'followers', value: user.followers },
-						{ label: 'years', value: stats.yearsActive }
-					] as item (item.label)}
+					{#each [{ label: 'repos', value: stats.ownedRepos }, { label: 'stars', value: stats.totalStars }, { label: 'followers', value: user.followers }, { label: 'years', value: stats.yearsActive }] as item (item.label)}
 						<div>
-							<p
-								class="text-[1.65rem] leading-none font-semibold tracking-tight tabular-nums"
-							>
+							<p class="text-[1.65rem] leading-none font-semibold tracking-tight tabular-nums">
 								{item.value}
 							</p>
-							<p class="text-faint mt-1.5 text-[11px] font-semibold tracking-[0.14em] uppercase">
+							<p class="mt-1.5 text-[11px] font-semibold tracking-[0.14em] text-faint uppercase">
 								{item.label}
 							</p>
 						</div>
@@ -257,7 +297,7 @@
 
 				{#if stats.languages.length}
 					<div class="mt-8">
-						<p class="text-muted mb-3 text-[12px] font-semibold tracking-[0.12em] uppercase">
+						<p class="mb-3 text-[12px] font-semibold tracking-[0.12em] text-muted uppercase">
 							Languages
 						</p>
 						<ul class="space-y-2.5">
@@ -266,17 +306,17 @@
 									class="grid grid-cols-[8.5rem_1fr_2.5rem] items-center gap-3 sm:grid-cols-[10rem_1fr_2.5rem]"
 									style="animation: rise 0.5s ease {0.18 + i * 0.04}s both;"
 								>
-									<span class="text-ink truncate text-[13px] font-medium">
+									<span class="truncate text-[13px] font-medium text-ink">
 										<TechLogo name={lang.name} size={15} />
 									</span>
-									<div class="bg-line/70 h-[3px] overflow-hidden">
+									<div class="h-[3px] overflow-hidden bg-line/70">
 										<div
-											class="bg-accent h-full origin-left"
+											class="h-full origin-left bg-accent"
 											style="width: {lang.pct}%; animation: grow 0.8s cubic-bezier(0.22,1,0.36,1) {0.25 +
 												i * 0.05}s both;"
 										></div>
 									</div>
-									<span class="text-faint text-right text-[12px] tabular-nums">{lang.pct}%</span>
+									<span class="text-right text-[12px] text-faint tabular-nums">{lang.pct}%</span>
 								</li>
 							{/each}
 						</ul>
@@ -284,63 +324,128 @@
 				{/if}
 
 				{#if contributions && contributions.weeks.length}
-				<div class="mt-8">
-					<p class="text-muted mb-3 text-[12px] font-semibold tracking-[0.12em] uppercase">
-						Contributions
-					</p>
-					<ContributionChart calendar={contributions} />
-				</div>
-			{/if}
+					<div class="mt-8">
+						<p class="mb-3 text-[12px] font-semibold tracking-[0.12em] text-muted uppercase">
+							Contributions
+						</p>
+						<ContributionChart calendar={contributions} />
+					</div>
+				{/if}
 			</section>
 
 			<!-- Projects -->
-			<section class="border-line border-b py-8" style="animation: rise 0.7s ease 0.2s both;">
-				<p class="text-comment mb-5 text-[13px] font-medium tracking-wide">// projects</p>
+			{#if FEATURED_PROJECTS.length}
+				<section class="border-b border-line py-8" style="animation: rise 0.7s ease 0.18s both;">
+					<div class="mb-5 flex items-baseline justify-between gap-4">
+						<p class="text-[13px] font-medium tracking-wide text-comment">// projects</p>
+						<a
+							href="/projects"
+							class="text-[12px] font-semibold tracking-wide text-accent hover:opacity-70"
+						>
+							All projects
+						</a>
+					</div>
+
+					<ul class="divide-y divide-line">
+						{#each FEATURED_PROJECTS as project, i (project.name)}
+							<li
+								class="py-4 first:pt-0 last:pb-0"
+								style="animation: rise 0.55s ease {0.2 + i * 0.05}s both;"
+							>
+								<div
+									class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
+								>
+									<a
+										href="/projects"
+										class="text-[15px] font-semibold tracking-tight text-ink transition-colors hover:text-accent"
+									>
+										{project.name}
+									</a>
+									{#if project.year}
+										<p class="shrink-0 text-[12px] font-medium text-faint tabular-nums">
+											{project.year}
+										</p>
+									{/if}
+								</div>
+
+								<p class="mt-1 text-[13.5px] leading-relaxed text-muted">{project.summary}</p>
+
+								{#if project.using.length}
+									<ul class="mt-3 flex flex-wrap gap-x-3 gap-y-2">
+										{#each project.using as item (item)}
+											<li class="text-[12.5px] font-medium tracking-wide text-muted">
+												<TechLogo name={item} size={14} />
+											</li>
+										{/each}
+									</ul>
+								{/if}
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{/if}
+
+			<!-- Public repos -->
+			<section class="border-b border-line py-8" style="animation: rise 0.7s ease 0.2s both;">
+				<p class="mb-5 text-[13px] font-medium tracking-wide text-comment">// public repos</p>
 
 				{#if repos.length === 0}
-					<p class="text-muted text-sm">No public repositories yet.</p>
+					<p class="text-sm text-muted">No public repositories yet.</p>
 				{:else}
-					<ul class="divide-line divide-y">
+					<ul class="divide-y divide-line">
 						{#each repos as repo, i (repo.id)}
 							{@const extra = extras(repo.name)}
 							{@const homepage = homepageFor(repo)}
 							{@const description = extra.description ?? repo.description}
 							<li class="py-4" style="animation: rise 0.55s ease {0.22 + i * 0.05}s both;">
-								<div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+								<div
+									class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
+								>
 									<div class="min-w-0">
 										<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
 											<a
 												href={repo.html_url}
 												target="_blank"
 												rel="noreferrer"
-												class="text-ink hover:text-accent text-[15px] font-semibold tracking-tight transition-colors"
+												class="text-[15px] font-semibold tracking-tight text-ink transition-colors hover:text-accent"
 											>
 												{repo.name}
 											</a>
 											{#if repo.stargazers_count > 0}
-												<span class="text-faint text-[12px] font-medium tabular-nums"
+												<span class="text-[12px] font-medium text-faint tabular-nums"
 													>★ {repo.stargazers_count}</span
 												>
 											{/if}
 										</div>
 										{#if description}
-											<p class="text-muted mt-1 text-[13.5px] leading-relaxed">
+											<p class="mt-1 text-[13.5px] leading-relaxed text-muted">
 												{description}
 											</p>
 										{/if}
+										{#if extra.using?.length}
+											<ul class="mt-3 flex flex-wrap gap-x-3 gap-y-2">
+												{#each extra.using as item (item)}
+													<li class="text-[12.5px] font-medium tracking-wide text-muted">
+														<TechLogo name={item} size={14} />
+													</li>
+												{/each}
+											</ul>
+										{/if}
 									</div>
-									<span class="text-faint shrink-0 text-[12px] font-medium tabular-nums">
+									<span class="shrink-0 text-[12px] font-medium text-faint tabular-nums">
 										{formatDate(repo.pushed_at)}
 									</span>
 								</div>
 
-								<ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] font-semibold tracking-wide">
+								<ul
+									class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] font-semibold tracking-wide"
+								>
 									<li>
 										<a
 											href={repo.html_url}
 											target="_blank"
 											rel="noreferrer"
-											class="text-accent hover:opacity-70 transition-opacity"
+											class="text-accent transition-opacity hover:opacity-70"
 										>
 											GitHub
 										</a>
@@ -351,7 +456,7 @@
 												href={extra.docs}
 												target="_blank"
 												rel="noreferrer"
-												class="text-accent hover:opacity-70 transition-opacity"
+												class="text-accent transition-opacity hover:opacity-70"
 											>
 												Docs
 											</a>
@@ -363,7 +468,7 @@
 												href={homepage}
 												target="_blank"
 												rel="noreferrer"
-												class="text-accent hover:opacity-70 transition-opacity"
+												class="text-accent transition-opacity hover:opacity-70"
 											>
 												Live
 											</a>
@@ -378,17 +483,17 @@
 
 			<!-- Blog -->
 			{#if posts.length}
-				<section class="border-line border-b py-8" style="animation: rise 0.7s ease 0.24s both;">
+				<section class="border-b border-line py-8" style="animation: rise 0.7s ease 0.24s both;">
 					<div class="mb-5 flex items-baseline justify-between gap-4">
-						<p class="text-comment text-[13px] font-medium tracking-wide">// blog</p>
+						<p class="text-[13px] font-medium tracking-wide text-comment">// blog</p>
 						<a
 							href="/blog"
-							class="text-accent text-[12px] font-semibold tracking-wide hover:opacity-70"
+							class="text-[12px] font-semibold tracking-wide text-accent hover:opacity-70"
 						>
 							All posts
 						</a>
 					</div>
-					<ul class="divide-line divide-y">
+					<ul class="divide-y divide-line">
 						{#each posts as post (post.slug)}
 							<li class="py-4 first:pt-0 last:pb-0">
 								<a href="/blog/{post.slug}" class="group block">
@@ -396,19 +501,21 @@
 										class="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
 									>
 										<span
-											class="text-ink group-hover:text-accent text-[15px] font-semibold tracking-tight transition-colors"
+											class="text-[15px] font-semibold tracking-tight text-ink transition-colors group-hover:text-accent"
 										>
 											{post.title}
 										</span>
-										<time
-											class="text-faint shrink-0 text-[12px] font-medium tabular-nums"
-											datetime={post.date}
-										>
-											{formatDate(post.date)}
-										</time>
+										{#if post.date}
+											<time
+												class="shrink-0 text-[12px] font-medium text-faint tabular-nums"
+												datetime={post.date}
+											>
+												{formatDate(post.date)}
+											</time>
+										{/if}
 									</div>
 									{#if post.description}
-										<p class="text-muted mt-1 text-[13.5px] leading-relaxed">
+										<p class="mt-1 text-[13.5px] leading-relaxed text-muted">
 											{post.description}
 										</p>
 									{/if}
@@ -419,12 +526,12 @@
 				</section>
 			{/if}
 
-			<footer class="border-line border-t pt-6">
-				<p class="text-faint text-[12px] font-medium tracking-wide">
+			<footer class="border-t border-line pt-6">
+				<p class="text-[12px] font-medium tracking-wide text-faint">
 					<span class="text-comment">//</span> sourced live from the GitHub API ·
 					<a
 						href={user.html_url}
-						class="hover:text-accent transition-colors"
+						class="transition-colors hover:text-accent"
 						target="_blank"
 						rel="noreferrer"
 					>

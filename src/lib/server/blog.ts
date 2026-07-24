@@ -56,9 +56,8 @@ export type BlogMeta = {
 	slug: string;
 	title: string;
 	description: string;
-	date: string;
+	date?: string;
 	tags: string[];
-	/** Plain markdown body for client-side search (not rendered HTML). */
 	content: string;
 	draft?: boolean;
 };
@@ -130,8 +129,39 @@ function slugFromPath(path: string): string {
 	return file.replace(/\.md$/, '');
 }
 
+function titleFromSlug(slug: string): string {
+	return slug
+		.split('-')
+		.filter(Boolean)
+		.map((word) => word[0]?.toUpperCase() + word.slice(1))
+		.join(' ');
+}
+
+function titleFromBody(body: string): string | null {
+	const heading = body.match(/^#\s+(.+)$/m)?.[1]?.trim();
+	return heading || null;
+}
+
+function descriptionFromBody(body: string): string {
+	const paragraph =
+		body
+			.split(/\n{2,}/)
+			.map((block) => block.trim())
+			.find((block) => block && !block.startsWith('#') && !block.startsWith('```')) ?? '';
+
+	return paragraph
+		.replace(/\[(.*?)\]\(.*?\)/g, '$1')
+		.replace(/[`*_>#-]/g, '')
+		.replace(/\s+/g, ' ')
+		.trim()
+		.slice(0, 180);
+}
+
 function toMeta(path: string, meta: Frontmatter, body = ''): BlogMeta | null {
-	if (!meta.title || !meta.date) return null;
+	const slug = slugFromPath(path);
+	const title = meta.title ?? titleFromBody(body) ?? titleFromSlug(slug);
+	if (!title) return null;
+
 	const tags = Array.isArray(meta.tags)
 		? meta.tags
 		: typeof meta.tags === 'string' && meta.tags
@@ -139,9 +169,9 @@ function toMeta(path: string, meta: Frontmatter, body = ''): BlogMeta | null {
 			: [];
 
 	return {
-		slug: slugFromPath(path),
-		title: meta.title,
-		description: meta.description ?? '',
+		slug,
+		title,
+		description: meta.description ?? descriptionFromBody(body),
 		date: meta.date,
 		tags,
 		content: body,
@@ -159,7 +189,12 @@ export function listPosts(): BlogMeta[] {
 		posts.push(post);
 	}
 
-	return posts.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+	return posts.sort((a, b) => {
+		if (a.date && b.date && a.date !== b.date) return a.date < b.date ? 1 : -1;
+		if (a.date && !b.date) return -1;
+		if (!a.date && b.date) return 1;
+		return a.title.localeCompare(b.title);
+	});
 }
 
 export function listTags(posts = listPosts()): string[] {
@@ -180,6 +215,13 @@ export function getPost(slug: string): BlogPost | null {
 	if (!post || post.draft) return null;
 
 	const html = marked.parse(body, { async: false }) as string;
-	const { content: _content, ...rest } = post;
-	return { ...rest, html };
+	return {
+		slug: post.slug,
+		title: post.title,
+		description: post.description,
+		date: post.date,
+		tags: post.tags,
+		draft: post.draft,
+		html
+	};
 }
