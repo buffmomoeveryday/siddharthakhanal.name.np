@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Seo from '#lib/components/Seo.svelte';
 	import TechLogo from '#lib/components/TechLogo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import ContributionChart from '#lib/components/ContributionChart.svelte';
@@ -98,6 +99,8 @@
 		return null;
 	}
 </script>
+
+<Seo />
 
 {#if data.error || !user || !stats}
 	<main class="mx-auto flex min-h-dvh max-w-2xl items-center px-6 py-16">

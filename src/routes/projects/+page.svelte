@@ -1,13 +1,11 @@
 <script lang="ts">
+	import Seo from '#lib/components/Seo.svelte';
 	import TechLogo from '#lib/components/TechLogo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { FEATURED_PROJECTS } from '#lib/config';
 </script>
 
-<svelte:head>
-	<title>Projects — Siddhartha Khanal</title>
-	<meta name="description" content="Selected projects by Siddhartha Khanal." />
-</svelte:head>
+<Seo title="Projects" description="Selected projects by Siddhartha Khanal." />
 
 <main class="mx-auto min-h-dvh w-full max-w-[720px] px-5 py-10 sm:px-8 sm:py-16">
 	<header class="border-b border-line pb-8">

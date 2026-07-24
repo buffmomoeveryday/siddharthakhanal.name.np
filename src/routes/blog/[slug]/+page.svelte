@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '#lib/components/Seo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import type { BlogPost } from '#lib/server/blog';
 
@@ -16,10 +17,7 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{post.title} — Blog</title>
-	<meta name="description" content={post.description || post.title} />
-</svelte:head>
+<Seo title={post.title} description={post.description || post.title} type="article" />
 
 <main class="mx-auto min-h-dvh w-full max-w-[720px] px-5 py-10 sm:px-8 sm:py-16">
 	<header class="border-b border-line pb-8">

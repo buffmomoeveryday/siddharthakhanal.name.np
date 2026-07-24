@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '#lib/components/Seo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import type { BlogMeta } from '#lib/server/blog';
 
@@ -14,10 +15,7 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Blog — Siddhartha Khanal</title>
-	<meta name="description" content="Notes and writing by Siddhartha Khanal." />
-</svelte:head>
+<Seo title="Blog" description="Notes and writing by Siddhartha Khanal." />
 
 <main class="mx-auto min-h-dvh w-full max-w-[720px] px-5 py-10 sm:px-8 sm:py-16">
 	<header class="border-b border-line pb-8">

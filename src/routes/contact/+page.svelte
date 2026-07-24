@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '#lib/components/Seo.svelte';
 	import TechLogo from '#lib/components/TechLogo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { LINKS, SITE, SOCIAL_LINKS } from '#lib/config';
@@ -14,10 +15,7 @@
 	const externalLinks = LINKS.filter((link) => !link.href.startsWith('mailto:'));
 </script>
 
-<svelte:head>
-	<title>Contact — Siddhartha Khanal</title>
-	<meta name="description" content="Contact Siddhartha Khanal." />
-</svelte:head>
+<Seo title="Contact" description="Contact Siddhartha Khanal." />
 
 <main class="mx-auto min-h-dvh w-full max-w-[720px] px-5 py-10 sm:px-8 sm:py-16">
 	<header class="border-b border-line pb-8">
