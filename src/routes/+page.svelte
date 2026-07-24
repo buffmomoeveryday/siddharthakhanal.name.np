@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import TechLogo from '#lib/components/TechLogo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import ContributionChart from '#lib/components/ContributionChart.svelte';
@@ -6,8 +7,8 @@
 		EDUCATION,
 		EXPERIENCE,
 		FEATURED_PROJECTS,
-		LINKS,
 		PROJECTS,
+		SITE,
 		SOCIAL_LINKS,
 		USING
 	} from '#lib/config';
@@ -28,6 +29,19 @@
 	const stats = $derived(portfolio?.stats);
 	const contributions = $derived(portfolio?.contributions);
 	const posts = $derived(data.posts ?? []);
+	const homeTimezone = 'Asia/Kathmandu';
+	let timezoneNote = $state<string | null>(null);
+
+	onMount(() => {
+		const visitorTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		if (!visitorTimezone || visitorTimezone === homeTimezone) return;
+
+		const now = new Date();
+		const difference = offsetMinutesAt(now, homeTimezone) - offsetMinutesAt(now, visitorTimezone);
+		if (difference === 0) return;
+
+		timezoneNote = `Kathmandu is ${formatTimezoneDifference(difference)} ${difference >= 0 ? 'ahead of' : 'behind'} you`;
+	});
 
 	function formatDate(iso: string) {
 		return new Date(iso).toLocaleDateString('en-US', {
@@ -36,8 +50,35 @@
 		});
 	}
 
-	function cleanUrl(url: string) {
-		return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+	function offsetMinutesAt(date: Date, timeZone: string) {
+		const parts = new Intl.DateTimeFormat('en-US', {
+			timeZone,
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+			hourCycle: 'h23',
+			hour12: false
+		}).formatToParts(date);
+		const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+		const asUtc = Date.UTC(
+			Number(values.year),
+			Number(values.month) - 1,
+			Number(values.day),
+			Number(values.hour),
+			Number(values.minute),
+			Number(values.second)
+		);
+		return Math.round((asUtc - date.getTime()) / 60000);
+	}
+
+	function formatTimezoneDifference(minutes: number) {
+		const absolute = Math.abs(minutes);
+		const hours = Math.floor(absolute / 60);
+		const mins = absolute % 60;
+		return mins ? `${hours}h ${mins}m` : `${hours}h`;
 	}
 
 	function displayName(u: NonNullable<typeof user>) {
@@ -91,6 +132,37 @@
 								{/if}
 							</p>
 						{/if}
+						<div class="mt-2 flex flex-col gap-2 text-[13px] font-medium tracking-wide text-muted">
+							<a href={`mailto:${SITE.email}`} class="transition-colors hover:text-accent">
+								{SITE.email}
+							</a>
+							{#if timezoneNote}
+								<span class="text-faint">{timezoneNote}</span>
+							{/if}
+							<ul class="flex flex-wrap gap-x-5 gap-y-2">
+								<li>
+									<a
+										href="/resume.pdf"
+										download="Siddhartha-Khanal-Resume.pdf"
+										class="inline-flex items-center transition-colors hover:text-accent"
+									>
+										<TechLogo name="Resume" size={15} />
+									</a>
+								</li>
+								{#each SOCIAL_LINKS as link (link.href)}
+									<li>
+										<a
+											href={link.href}
+											class="inline-flex items-center transition-colors hover:text-accent"
+											target="_blank"
+											rel="noreferrer"
+										>
+											<TechLogo name={link.label} size={15} />
+										</a>
+									</li>
+								{/each}
+							</ul>
+						</div>
 						{#if user.bio}
 							<p class="mt-3 max-w-md text-[15px] leading-relaxed text-muted">{user.bio}</p>
 						{/if}
@@ -119,51 +191,6 @@
 					<li>
 						<a href="/contact" class="transition-colors hover:text-accent">Contact</a>
 					</li>
-					<li>
-						<a
-							href="/resume.pdf"
-							download="Siddhartha-Khanal-Resume.pdf"
-							class="inline-flex items-center transition-colors hover:text-accent"
-						>
-							<TechLogo name="Resume" size={15} />
-						</a>
-					</li>
-					{#each SOCIAL_LINKS as link (link.href)}
-						<li>
-							<a
-								href={link.href}
-								class="inline-flex items-center transition-colors hover:text-accent"
-								target="_blank"
-								rel="noreferrer"
-							>
-								<TechLogo name={link.label} size={15} />
-							</a>
-						</li>
-					{/each}
-					{#each LINKS as link (link.href)}
-						<li>
-							<a
-								href={link.href}
-								class="inline-flex items-center transition-colors hover:text-accent"
-								target={link.href.startsWith('mailto:') ? undefined : '_blank'}
-								rel={link.href.startsWith('mailto:') ? undefined : 'noreferrer'}
-							>
-								<TechLogo name={link.label} size={15} />
-							</a>
-						</li>
-					{/each}
-					{#if user.blog && !LINKS.some((l) => l.href.includes(cleanUrl(user.blog)))}
-						<li>
-							<a
-								href={user.blog.startsWith('http') ? user.blog : `https://${user.blog}`}
-								class="transition-colors hover:text-accent"
-								target="_blank"
-								rel="noreferrer"
-							>
-								{cleanUrl(user.blog)}
-							</a>
-						</li>
-					{/if}
 				</ul>
 			</header>
 

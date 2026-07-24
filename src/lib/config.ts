@@ -9,10 +9,7 @@ export const SITE = {
 } as const;
 
 /** Header / footer links. GitHub profile is always included from the API. */
-export const LINKS: { label: string; href: string }[] = [
-	{ label: 'Website', href: 'https://siddharthakhanal.com' },
-	{ label: 'Email', href: 'mailto:hello@siddharthakhanal.name.np' }
-];
+export const LINKS: { label: string; href: string }[] = [];
 
 export const SOCIAL_LINKS: { label: string; href: string }[] = [
 	{ label: 'GitHub', href: 'https://github.com/buffmomoeveryday' },
