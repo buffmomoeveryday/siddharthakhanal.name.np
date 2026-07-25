@@ -2,14 +2,14 @@
 title: Docker Swarm
 description: A quick note on what Docker Swarm is and when it is enough.
 date: 2026-07-24
-tags: [docker, ops, swarm]
+tags: [docker, ops, swarm,notes]
 ---
 
 # Docker Swarm
 
 Docker Swarm is Docker's built-in clustering and orchestration mode. It lets you run containers across multiple machines while still using familiar Docker commands.
 
-It is useful when you want something simpler than Kubernetes for a small service, internal tool, or homelab deployment.
+It is useful when you want something simpler than Kubernetes for a small service, internal tool, or homelab deployment, because Kubernetes is a nightmare for small team to maintain
 
 ## Basic idea
 

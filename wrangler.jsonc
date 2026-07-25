@@ -8,6 +8,12 @@
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
+	"kv_namespaces": [
+		{
+			"binding": "GITHUB_STATS",
+			"id": "955fd6cb8ce341c1a8c61cc4e15cbcf8"
+		}
+	],
 	"workers_dev": true,
 	"preview_urls": true,
 	"observability": {

@@ -3,13 +3,7 @@
 	import TechLogo from '#lib/components/TechLogo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { LINKS, SITE, SOCIAL_LINKS } from '#lib/config';
-
-	type ContactForm = {
-		status?: 'sent' | 'error';
-		message?: string;
-	};
-
-	let { form }: { form?: ContactForm } = $props();
+	import { contactForm } from './contact.remote';
 
 	const emailHref = `mailto:${SITE.email}`;
 	const externalLinks = LINKS.filter((link) => !link.href.startsWith('mailto:'));
@@ -50,30 +44,38 @@
 				</p>
 			</div>
 
-			<form class="space-y-4" method="POST">
+			<form class="space-y-4" {...contactForm}>
 				<div class="grid gap-4 sm:grid-cols-2">
 					<label class="block">
 						<span class="mb-1.5 block text-[12px] font-semibold tracking-wide text-muted">Name</span
 						>
 						<input
-							name="name"
-							type="text"
+							{...contactForm.fields.name.as('text')}
 							autocomplete="name"
 							required
 							class="w-full border-line bg-paper text-[14px] text-ink shadow-none transition-colors focus:border-accent focus:ring-accent"
 						/>
+						{#if contactForm.fields.name.issues()?.[0]}
+							<p class="mt-1.5 text-[12px] font-medium text-kw">
+								{contactForm.fields.name.issues()?.[0].message}
+							</p>
+						{/if}
 					</label>
 					<label class="block">
 						<span class="mb-1.5 block text-[12px] font-semibold tracking-wide text-muted"
 							>Email</span
 						>
 						<input
-							name="email"
-							type="email"
+							{...contactForm.fields.email.as('email')}
 							autocomplete="email"
 							required
 							class="w-full border-line bg-paper text-[14px] text-ink shadow-none transition-colors focus:border-accent focus:ring-accent"
 						/>
+						{#if contactForm.fields.email.issues()?.[0]}
+							<p class="mt-1.5 text-[12px] font-medium text-kw">
+								{contactForm.fields.email.issues()?.[0].message}
+							</p>
+						{/if}
 					</label>
 				</div>
 
@@ -82,27 +84,34 @@
 						>Message</span
 					>
 					<textarea
-						name="message"
+						{...contactForm.fields.message.as('text')}
 						rows="5"
 						required
 						class="w-full resize-y border-line bg-paper text-[14px] text-ink shadow-none transition-colors focus:border-accent focus:ring-accent"
 					></textarea>
+					{#if contactForm.fields.message.issues()?.[0]}
+						<p class="mt-1.5 text-[12px] font-medium text-kw">
+							{contactForm.fields.message.issues()?.[0].message}
+						</p>
+					{/if}
 				</label>
 
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<p
+						aria-live="polite"
 						class="min-h-[1.25rem] text-[12.5px] font-medium"
-						class:text-muted={!form?.status}
-						class:text-comment={form?.status === 'sent'}
-						class:text-kw={form?.status === 'error'}
+						class:text-muted={!contactForm.result?.status}
+						class:text-comment={contactForm.result?.status === 'sent'}
+						class:text-kw={contactForm.result?.status === 'error'}
 					>
-						{form?.message || 'Delivered privately through ntfy.sh.'}
+						{contactForm.result?.message || 'Delivered privately through ntfy.sh.'}
 					</p>
 					<button
 						type="submit"
+						disabled={contactForm.pending > 0}
 						class="inline-flex items-center justify-center border border-accent px-4 py-2 text-[13px] font-semibold tracking-wide text-accent transition-colors hover:bg-accent hover:text-paper disabled:cursor-wait disabled:opacity-60"
 					>
-						Send message
+						{contactForm.pending > 0 ? 'Sending...' : 'Send message'}
 					</button>
 				</div>
 			</form>

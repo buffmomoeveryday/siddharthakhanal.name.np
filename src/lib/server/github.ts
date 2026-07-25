@@ -2,6 +2,8 @@ import { GITHUB_USERNAME } from '../config';
 
 const API = 'https://api.github.com';
 const GRAPHQL = 'https://api.github.com/graphql';
+const MEMORY_CACHE_TTL_MS = 5 * 60 * 1000;
+const KV_CACHE_TTL_SECONDS = 24 * 60 * 60;
 
 export type GitHubUser = {
 	login: string;
@@ -73,6 +75,15 @@ export type PortfolioData = {
 	contributions: ContributionCalendar | null;
 };
 
+class GitHubApiError extends Error {
+	constructor(
+		readonly status: number,
+		path: string
+	) {
+		super(`GitHub API ${status}: ${path}`);
+	}
+}
+
 function headers(token?: string): HeadersInit {
 	const h: Record<string, string> = {
 		Accept: 'application/vnd.github+json',
@@ -85,7 +96,7 @@ function headers(token?: string): HeadersInit {
 async function gh<T>(path: string, token?: string): Promise<T> {
 	const res = await fetch(`${API}${path}`, { headers: headers(token) });
 	if (!res.ok) {
-		throw new Error(`GitHub API ${res.status}: ${path}`);
+		throw new GitHubApiError(res.status, path);
 	}
 	return res.json() as Promise<T>;
 }
@@ -229,41 +240,106 @@ function buildStats(user: GitHubUser, repos: GitHubRepo[]): GitHubStats {
 	};
 }
 
-const CACHE_TTL_MS = 5 * 60 * 1000;
 let cache: { key: string; at: number; data: PortfolioData } | null = null;
+
+function kvCacheKey(key: string) {
+	return `github:portfolio:${key}`;
+}
+
+function kvLatestKey(key: string) {
+	return `${kvCacheKey(key)}:latest`;
+}
+
+function isForbidden(error: unknown) {
+	return error instanceof GitHubApiError && error.status === 403;
+}
+
+async function readCachedPortfolio(
+	kv: KVNamespace | undefined,
+	key: string,
+	latest = false
+): Promise<PortfolioData | null> {
+	if (!kv) return null;
+
+	try {
+		return await kv.get<PortfolioData>(latest ? kvLatestKey(key) : kvCacheKey(key), 'json');
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		console.error(`GitHub stats cache read failed: ${message}`);
+		return null;
+	}
+}
+
+async function writeCachedPortfolio(
+	kv: KVNamespace | undefined,
+	key: string,
+	data: PortfolioData
+): Promise<void> {
+	if (!kv) return;
+
+	const serialized = JSON.stringify(data);
+
+	try {
+		await Promise.all([
+			kv.put(kvCacheKey(key), serialized, { expirationTtl: KV_CACHE_TTL_SECONDS }),
+			kv.put(kvLatestKey(key), serialized)
+		]);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		console.error(`GitHub stats cache write failed: ${message}`);
+	}
+}
 
 export async function fetchPortfolio(
 	username = GITHUB_USERNAME,
-	token?: string
+	token?: string,
+	kv?: KVNamespace
 ): Promise<PortfolioData> {
 	const key = `${username}:${token ? 'auth' : 'anon'}`;
-	if (cache && cache.key === key && Date.now() - cache.at < CACHE_TTL_MS) {
+	if (cache && cache.key === key && Date.now() - cache.at < MEMORY_CACHE_TTL_MS) {
 		return cache.data;
 	}
 
-	const [user, repos, contributions] = await Promise.all([
-		gh<GitHubUser>(`/users/${username}`, token),
-		fetchAllRepos(username, token),
-		fetchContributions(username, token)
-	]);
+	const cached = await readCachedPortfolio(kv, key);
+	if (cached) {
+		cache = { key, at: Date.now(), data: cached };
+		return cached;
+	}
 
-	const featured = repos
-		.filter((r) => !r.fork && !r.archived)
-		.sort((a, b) => {
-			if (b.stargazers_count !== a.stargazers_count) {
-				return b.stargazers_count - a.stargazers_count;
-			}
-			return new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime();
-		})
-		.slice(0, 8);
+	try {
+		const [user, repos, contributions] = await Promise.all([
+			gh<GitHubUser>(`/users/${username}`, token),
+			fetchAllRepos(username, token),
+			fetchContributions(username, token)
+		]);
 
-	const data: PortfolioData = {
-		user,
-		repos: featured,
-		stats: buildStats(user, repos),
-		contributions
-	};
+		const featured = repos
+			.filter((r) => !r.fork && !r.archived)
+			.sort((a, b) => {
+				if (b.stargazers_count !== a.stargazers_count) {
+					return b.stargazers_count - a.stargazers_count;
+				}
+				return new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime();
+			})
+			.slice(0, 8);
 
-	cache = { key, at: Date.now(), data };
-	return data;
+		const data: PortfolioData = {
+			user,
+			repos: featured,
+			stats: buildStats(user, repos),
+			contributions
+		};
+
+		cache = { key, at: Date.now(), data };
+		await writeCachedPortfolio(kv, key, data);
+		return data;
+	} catch (error) {
+		const latest = isForbidden(error) ? await readCachedPortfolio(kv, key, true) : null;
+		if (latest) {
+			cache = { key, at: Date.now(), data: latest };
+			return latest;
+		}
+
+		throw error;
+	}
 }

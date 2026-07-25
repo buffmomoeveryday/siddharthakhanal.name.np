@@ -9,11 +9,15 @@ export type PageLoadData = {
 	posts: BlogMeta[];
 };
 
-export const load: PageServerLoad = async (): Promise<PageLoadData> => {
+export const load: PageServerLoad = async ({ platform }): Promise<PageLoadData> => {
 	const posts = listPosts().slice(0, 3);
 
 	try {
-		const portfolio = await fetchPortfolio(undefined, GITHUB_TOKEN || undefined);
+		const portfolio = await fetchPortfolio(
+			undefined,
+			GITHUB_TOKEN || undefined,
+			platform?.env.GITHUB_STATS
+		);
 		return { portfolio, error: null, posts };
 	} catch (e) {
 		const message = e instanceof Error ? e.message : 'Failed to load GitHub data';
